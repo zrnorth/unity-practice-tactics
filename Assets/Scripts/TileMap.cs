@@ -15,6 +15,7 @@ public class TileMap : MonoBehaviour
     [SerializeField]
     Camera _mainCamera;
 
+    private GameObject _selectedUnit;
     int[,] tiles;         // map of tile#s to their type
 
     private void Start()
@@ -23,6 +24,10 @@ public class TileMap : MonoBehaviour
         GenerateMapVisuals();
         // Move the camera to the center of the battlefield
         _mainCamera.transform.position = new Vector3((_mapSizeX - 1) / 2f, (_mapSizeY - 1) / 2f, -10);
+
+        // TODO: add unit selection
+        _selectedUnit = GameObject.Find("Unit");
+        MoveSelectedUnitTo(0, 0);
     }
 
     private void GenerateTiles()
@@ -59,11 +64,30 @@ public class TileMap : MonoBehaviour
                 TileType tt = _tileTypes[tiles[x, y]];
 
                 GameObject tile = Instantiate(tt.tilePrefab, new Vector3(x, y, 0), Quaternion.identity);
+                ClickableTile ct = tile.GetComponent<ClickableTile>();
+                ct.SetGridPosition(x, y);
+                ct.SetTileMap(this);
                 if (_showTileGrid)
                 {
                     Instantiate(_tileEdgesPrefab, tile.transform);
                 }
             }
         }
+    }
+
+    // Helper to pass in a tile position and return a world coord of the tile position.
+    public Vector3 TileCoordToWorldCoord(int x, int y)
+    {
+        return new Vector3(x, y, 0);
+    }
+
+    // TODO: add unit selection
+    public void MoveSelectedUnitTo(int x, int y)
+    {
+        Unit unit = _selectedUnit.GetComponent<Unit>();
+        // Set position both in the tilemap and worldmap. These might coincidentally be the same,
+        // but lets assume they aren't.
+        unit.SetTileMapPosition(x, y);
+        unit.transform.position = TileCoordToWorldCoord(x, y);
     }
 }

@@ -264,7 +264,7 @@ MonoBehaviour:
       type: 3}
   _tileEdgesPrefab: {fileID: 1900890019644601756, guid: 0f24b97b9191a8442a0416ef2d942b62,
     type: 3}
-  _showTileGrid: 0
+  _showTileGrid: 1
   _mainCamera: {fileID: 519420031}
 --- !u!1 &2105843748
 GameObject:
