@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class Unit : MonoBehaviour
 {
+    [SerializeField]
+    private TileMap _map;
+
     private int _tileX, _tileY;
     private List<Node> _movementPath;
 
@@ -30,5 +33,23 @@ public class Unit : MonoBehaviour
             str += n.GetPosString();
         }
         Debug.Log(str);
+    }
+
+    private void DrawDebugPath()
+    {
+        if (_movementPath != null)
+        {
+            for (int curr = 0; curr < _movementPath.Count - 1; curr++)
+            {
+                Vector3 start = _map.TileCoordToWorldCoord(_movementPath[curr].x, _movementPath[curr].y);
+                Vector3 end = _map.TileCoordToWorldCoord(_movementPath[curr + 1].x, _movementPath[curr + 1].y);
+
+                Debug.DrawLine(start, end);
+            }
+        }
+    }
+    private void Update()
+    {
+        DrawDebugPath();
     }
 }

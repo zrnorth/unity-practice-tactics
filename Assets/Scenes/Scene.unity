@@ -251,15 +251,15 @@ MonoBehaviour:
   _mapSizeY: 8
   _tileTypes:
   - name: Grass
-    isPassable: 1
+    movementCost: 1
     tilePrefab: {fileID: 3561409063228401740, guid: 1bcd0bf9a7774e34f89a95e0bdac29fa,
       type: 3}
   - name: Mountain
-    isPassable: 0
+    movementCost: 2
     tilePrefab: {fileID: 521398470282877464, guid: 265bc972a3942554abeb6a3e073ede5b,
       type: 3}
   - name: Water
-    isPassable: 0
+    movementCost: 1
     tilePrefab: {fileID: 4995008166394992040, guid: 8098ef690cf96c149967a6b4ac7f8a6e,
       type: 3}
   _tileEdgesPrefab: {fileID: 1900890019644601756, guid: 0f24b97b9191a8442a0416ef2d942b62,
@@ -387,3 +387,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f24286852e85a949ad42ab89184e701, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _map: {fileID: 557026337}

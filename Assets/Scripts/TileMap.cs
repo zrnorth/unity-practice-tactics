@@ -3,43 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-// For pathfinding
-public class Node
-{
-    public int x, y;
-    public List<Node> neighbors; // Not an array lmao
-    public Node(int x, int y)
-    {
-        this.x = x;
-        this.y = y;
-        neighbors = new List<Node>();
-    }
-
-    public float DistanceTo(Node n)
-    {
-        // Could use taxicab distance here, not sure what's better.
-        // Eventually might need to scale this based on stuff like
-        // swamps taking 2 moves to get through instead of 1
-        return Vector2.Distance(
-            new Vector2(this.x, this.y),
-            new Vector2(n.x, n.y));
-    }
-    public string GetPosString()
-    {
-        return "(" + x + ", " + y + ")";
-    }
-    public override string ToString()
-    {
-        string str = GetPosString() + " -> [";
-        foreach (Node neighbor in neighbors)
-        {
-            str += neighbor.GetPosString() + ", ";
-        }
-        str += "]";
-        return str;
-    }
-}
-
 public class TileMap : MonoBehaviour
 {
     // Game modifiers
@@ -56,7 +19,7 @@ public class TileMap : MonoBehaviour
 
     // Class vars
     private Unit _selectedUnit;
-    int[,] tiles;                   // map of tile#s to their type
+    int[,] _tiles;                   // map of tile#s to their type
     Node[,] _graph;                 // Nodes for pathfinding
 
 
@@ -75,27 +38,27 @@ public class TileMap : MonoBehaviour
 
     private void GenerateTiles()
     {
-        tiles = new int[_mapSizeX, _mapSizeY];
+        _tiles = new int[_mapSizeX, _mapSizeY];
         // Initialize every tile. Default is item at index 0 in _tileTypes i.e. the first in the list.
         for (int x = 0; x < _mapSizeX; x++)
         {
             for (int y = 0; y < _mapSizeY; y++)
             {
-                tiles[x, y] = 0;
+                _tiles[x, y] = 0;
             }
         }
 
         // TEMP playing with generation logic here. Assuming 8x8 size
-        tiles[2, 2] = 1; // Mountains
-        tiles[2, 3] = 1; // Mountains
-        tiles[2, 4] = 1; // Mountains
-        tiles[2, 5] = 1; // Mountains
-        tiles[3, 2] = 1; // Mountains
-        tiles[3, 3] = 1; // Mountains
-        tiles[6, 6] = 2; // Water
-        tiles[6, 7] = 2; // Water
-        tiles[7, 6] = 2; // Water
-        tiles[7, 7] = 2; // Water
+        _tiles[2, 2] = 1; // Mountains
+        _tiles[2, 3] = 1; // Mountains
+        _tiles[2, 4] = 1; // Mountains
+        _tiles[2, 5] = 1; // Mountains
+        _tiles[3, 2] = 1; // Mountains
+        _tiles[3, 3] = 1; // Mountains
+        _tiles[6, 6] = 2; // Water
+        _tiles[6, 7] = 2; // Water
+        _tiles[7, 6] = 2; // Water
+        _tiles[7, 7] = 2; // Water
     }
 
     private void GeneratePathfindingGraph()
@@ -143,7 +106,7 @@ public class TileMap : MonoBehaviour
         {
             for (int y = 0; y < _mapSizeY; y++)
             {
-                TileType tt = _tileTypes[tiles[x, y]];
+                TileType tt = _tileTypes[_tiles[x, y]];
 
                 GameObject tile = Instantiate(tt.tilePrefab, new Vector3(x, y, 0), Quaternion.identity);
                 ClickableTile ct = tile.GetComponent<ClickableTile>();
@@ -173,6 +136,19 @@ public class TileMap : MonoBehaviour
         // but lets assume they aren't.
         unit.SetTileMapPosition(x, y);
         unit.transform.position = TileCoordToWorldCoord(x, y);
+    }
+
+    float CostToEnterTile(int x, int y)
+    {
+        TileType tt = _tileTypes[_tiles[x, y]];
+        return tt.movementCost == TileType.IMPASSABLE
+                ? Mathf.Infinity
+                : tt.movementCost;
+    }
+
+    float CostToEnterNode(Node n)
+    {
+        return CostToEnterTile(n.x, n.y);
     }
 
     // Load the movement path to (x,y) into the currently selected unit
@@ -223,7 +199,7 @@ public class TileMap : MonoBehaviour
             unvisited.Remove(closest);
             foreach (Node neighbor in closest.neighbors)
             {
-                float alt = dist[closest] + closest.DistanceTo(neighbor);
+                float alt = dist[closest] + CostToEnterNode(neighbor);
                 if (alt < dist[neighbor])
                 {
                     dist[neighbor] = alt;
