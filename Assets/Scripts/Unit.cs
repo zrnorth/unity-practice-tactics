@@ -4,11 +4,17 @@ using UnityEngine;
 
 public class Unit : MonoBehaviour
 {
+    // Modifiers
+    [SerializeField]
+    private bool _canMoveDiagonally = false; // If true, this unit can move on diagonals, not just NESW.
+    [SerializeField]
+    private float _movementSpeed = 1; // Number of squares this unit can move per turn
+
+    // References
     [SerializeField]
     private TileMap _map;
-    [SerializeField]
-    private bool _canMoveDiagonally; // If true, this unit can move on diagonals, not just NESW.
 
+    // Class vars
     private int _tileX, _tileY;
     private List<Node> _movementPath;
 
@@ -44,27 +50,24 @@ public class Unit : MonoBehaviour
 
     public void Move()
     {
-        if (_movementPath == null) return;
-        if (_movementPath.Count <= 1)
+        float remainingMovement = _movementSpeed;
+
+        while (remainingMovement > 0)
         {
-            // The first node always contains the current pos.
-            // We probably clicked on our exact position, or something.
-            _movementPath = null;
-            return;
-        }
+            if (_movementPath == null) return;
+            Node curr = _movementPath[0];
+            Node next = _movementPath[1];
+            remainingMovement -= _map.CostToEnterNode(curr, next);
+            transform.position = _map.WorldCoordsForNode(next);
+            _tileX = next.x;
+            _tileY = next.y;
+            _movementPath.RemoveAt(0);
 
-        Node from = _movementPath[0];
-        Node to = _movementPath[1];
-        _movementPath.RemoveAt(0);
-
-        transform.position = _map.TileCoordToWorldCoord(to.x, to.y);
-        _tileX = to.x;
-        _tileY = to.y;
-
-        if (_movementPath.Count <= 1)
-        {
-            // Same check as above, just to potentially clean up 1 turn faster.
-            _movementPath = null;
+            // If there's only one node left, we must be at the destination.
+            if (_movementPath.Count == 1)
+            {
+                _movementPath = null;
+            }
         }
     }
 
@@ -74,8 +77,8 @@ public class Unit : MonoBehaviour
         {
             for (int curr = 0; curr < _movementPath.Count - 1; curr++)
             {
-                Vector3 start = _map.TileCoordToWorldCoord(_movementPath[curr].x, _movementPath[curr].y);
-                Vector3 end = _map.TileCoordToWorldCoord(_movementPath[curr + 1].x, _movementPath[curr + 1].y);
+                Vector3 start = _map.WorldCoordsForNode(_movementPath[curr]);
+                Vector3 end = _map.WorldCoordsForNode(_movementPath[curr + 1]);
 
                 Debug.DrawLine(start, end);
             }

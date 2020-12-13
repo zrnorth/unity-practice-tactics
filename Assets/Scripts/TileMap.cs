@@ -200,6 +200,11 @@ public class TileMap : MonoBehaviour
         return new Vector3(x, y, 0);
     }
 
+    public Vector3 WorldCoordsForNode(Node n)
+    {
+        return TileCoordToWorldCoord(n.x, n.y);
+    }
+
     // TODO: add unit selection
     // jump directly to (x, y)
     public void TeleportSelectedUnitTo(int x, int y)
@@ -211,7 +216,7 @@ public class TileMap : MonoBehaviour
         unit.transform.position = TileCoordToWorldCoord(x, y);
     }
 
-    float CostToEnterTile(int fromX, int fromY, int toX, int toY)
+    public float CostToEnterTile(int fromX, int fromY, int toX, int toY)
     {
         TileType tt = _tileTypes[_tiles[toX, toY]];
         if (tt.movementCost == TileType.IMPASSABLE)
@@ -229,7 +234,7 @@ public class TileMap : MonoBehaviour
         return cost;
     }
 
-    float CostToEnterNode(Node from, Node to)
+    public float CostToEnterNode(Node from, Node to)
     {
         return CostToEnterTile(from.x, from.y, to.x, to.y);
     }
