@@ -247,18 +247,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5c67dfb1b3f57b4ab60804d28f5b9fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mapSizeX: 3
-  _mapSizeY: 3
+  _mapSizeX: 5
+  _mapSizeY: 5
   _tileTypes:
-  - _name: Grass
-    _isPassable: 1
-    _tilePrefab: {fileID: 3561409063228401740, guid: 1bcd0bf9a7774e34f89a95e0bdac29fa,
+  - name: Grass
+    isPassable: 1
+    tilePrefab: {fileID: 3561409063228401740, guid: 1bcd0bf9a7774e34f89a95e0bdac29fa,
       type: 3}
-  - _name: Mountain
-    _isPassable: 0
-    _tilePrefab: {fileID: 521398470282877464, guid: 265bc972a3942554abeb6a3e073ede5b,
+  - name: Mountain
+    isPassable: 0
+    tilePrefab: {fileID: 521398470282877464, guid: 265bc972a3942554abeb6a3e073ede5b,
       type: 3}
-  - _name: Water
-    _isPassable: 0
-    _tilePrefab: {fileID: 4995008166394992040, guid: 8098ef690cf96c149967a6b4ac7f8a6e,
+  - name: Water
+    isPassable: 0
+    tilePrefab: {fileID: 4995008166394992040, guid: 8098ef690cf96c149967a6b4ac7f8a6e,
       type: 3}
+  _mainCamera: {fileID: 519420031}
