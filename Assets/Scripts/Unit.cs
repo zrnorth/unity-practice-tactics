@@ -42,6 +42,32 @@ public class Unit : MonoBehaviour
         Debug.Log(str);
     }
 
+    public void Move()
+    {
+        if (_movementPath == null) return;
+        if (_movementPath.Count <= 1)
+        {
+            // The first node always contains the current pos.
+            // We probably clicked on our exact position, or something.
+            _movementPath = null;
+            return;
+        }
+
+        Node from = _movementPath[0];
+        Node to = _movementPath[1];
+        _movementPath.RemoveAt(0);
+
+        transform.position = _map.TileCoordToWorldCoord(to.x, to.y);
+        _tileX = to.x;
+        _tileY = to.y;
+
+        if (_movementPath.Count <= 1)
+        {
+            // Same check as above, just to potentially clean up 1 turn faster.
+            _movementPath = null;
+        }
+    }
+
     private void DrawDebugPath()
     {
         if (_movementPath != null)
@@ -55,6 +81,7 @@ public class Unit : MonoBehaviour
             }
         }
     }
+
     private void Update()
     {
         DrawDebugPath();
