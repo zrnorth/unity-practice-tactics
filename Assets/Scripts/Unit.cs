@@ -6,6 +6,8 @@ public class Unit : MonoBehaviour
 {
     [SerializeField]
     private TileMap _map;
+    [SerializeField]
+    private bool _canMoveDiagonally; // If true, this unit can move on diagonals, not just NESW.
 
     private int _tileX, _tileY;
     private List<Node> _movementPath;
@@ -15,6 +17,11 @@ public class Unit : MonoBehaviour
     {
         x = _tileX;
         y = _tileY;
+    }
+
+    public bool CanMoveDiagonally()
+    {
+        return _canMoveDiagonally;
     }
 
     public void SetTileMapPosition(int x, int y)

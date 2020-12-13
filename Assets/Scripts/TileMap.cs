@@ -20,20 +20,28 @@ public class TileMap : MonoBehaviour
     // Class vars
     private Unit _selectedUnit;
     int[,] _tiles;                   // map of tile#s to their type
-    Node[,] _graph;                 // Nodes for pathfinding
+    Node[,] _graph;                  // Nodes for pathfinding
 
 
     private void Start()
     {
         GenerateTiles();
-        GeneratePathfindingGraph();
-        GenerateMapVisuals();
-        // Move the camera to the center of the battlefield
-        _mainCamera.transform.position = new Vector3((_mapSizeX - 1) / 2f, (_mapSizeY - 1) / 2f, -10);
-
         // TODO: add unit selection
         _selectedUnit = GameObject.Find("Unit").GetComponent<Unit>();
         TeleportSelectedUnitTo(0, 0);
+
+        if (_selectedUnit.CanMoveDiagonally())
+        {
+            Generate8WayPathfindingGraph();
+        }
+        else
+        {
+            Generate4WayPathfindingGraph();
+        }
+
+        GenerateMapVisuals();
+        // Move the camera to the center
+        _mainCamera.transform.position = new Vector3((_mapSizeX - 1) / 2f, (_mapSizeY - 1) / 2f, -10);
     }
 
     private void GenerateTiles()
@@ -48,24 +56,31 @@ public class TileMap : MonoBehaviour
             }
         }
 
-        // TEMP playing with generation logic here. Assuming 8x8 size
-        _tiles[2, 2] = 1; // Mountains
-        _tiles[2, 3] = 1; // Mountains
-        _tiles[2, 4] = 1; // Mountains
-        _tiles[2, 5] = 1; // Mountains
-        _tiles[3, 2] = 1; // Mountains
-        _tiles[3, 3] = 1; // Mountains
+        // TEMP making a custom map here. Assuming 8x8 size
+        _tiles[4, 5] = 1; // Mountains
+        _tiles[5, 5] = 1; // Mountains
+        _tiles[6, 3] = 1; // Mountains
+        _tiles[6, 4] = 1; // Mountains
+        _tiles[6, 5] = 1; // Mountains
+        _tiles[1, 1] = 2; // Water
+        _tiles[1, 2] = 2; // Water
+        _tiles[1, 3] = 2; // Water
+        _tiles[2, 3] = 2; // Water
+        _tiles[2, 1] = 2; // Water
+        _tiles[3, 1] = 2; // Water
+        _tiles[3, 2] = 2; // Water
         _tiles[6, 6] = 2; // Water
         _tiles[6, 7] = 2; // Water
         _tiles[7, 6] = 2; // Water
         _tiles[7, 7] = 2; // Water
+
     }
 
-    private void GeneratePathfindingGraph()
+    // No diagonal movement
+    private void Generate4WayPathfindingGraph()
     {
         _graph = new Node[_mapSizeX, _mapSizeY];
         // Initialize the _graph array
-
         for (int x = 0; x < _mapSizeX; x++)
         {
             for (int y = 0; y < _mapSizeY; y++)
@@ -78,23 +93,81 @@ public class TileMap : MonoBehaviour
         {
             for (int y = 0; y < _mapSizeY; y++)
             {
-                Node curr = _graph[x, y];
-                // No diagonal movement
-                if (y < _mapSizeY - 1)
+                List<Node> currNeighbors = _graph[x, y].neighbors;
+
+                if (x > 0)
                 {
-                    curr.neighbors.Add(_graph[x, y + 1]);
-                }
-                if (y > 0)
-                {
-                    curr.neighbors.Add(_graph[x, y - 1]);
+                    currNeighbors.Add(_graph[x - 1, y]);  // West
                 }
                 if (x < _mapSizeX - 1)
                 {
-                    curr.neighbors.Add(_graph[x + 1, y]);
+                    currNeighbors.Add(_graph[x + 1, y]);  // East
                 }
+                if (y > 0)
+                {
+                    currNeighbors.Add(_graph[x, y - 1]);  // South
+                }
+                if (y < _mapSizeY - 1)
+                {
+                    currNeighbors.Add(_graph[x, y + 1]);  // North
+                }
+
+            }
+        }
+    }
+
+    // Diagonal movement is allowed
+    private void Generate8WayPathfindingGraph()
+    {
+        _graph = new Node[_mapSizeX, _mapSizeY];
+        // Initialize the _graph array
+        for (int x = 0; x < _mapSizeX; x++)
+        {
+            for (int y = 0; y < _mapSizeY; y++)
+            {
+                _graph[x, y] = new Node(x, y);
+            }
+        }
+
+        for (int x = 0; x < _mapSizeX; x++)
+        {
+            for (int y = 0; y < _mapSizeY; y++)
+            {
+                List<Node> currNeighbors = _graph[x, y].neighbors;
+
                 if (x > 0)
                 {
-                    curr.neighbors.Add(_graph[x - 1, y]);
+                    currNeighbors.Add(_graph[x - 1, y]); // West
+                    if (y > 0)
+                    {
+                        currNeighbors.Add(_graph[x - 1, y - 1]); // Southwest
+                    }
+                    if (y < _mapSizeY - 1)
+                    {
+                        currNeighbors.Add(_graph[x - 1, y + 1]); // Northwest
+                    }
+                }
+
+                if (x < _mapSizeX - 1)
+                {
+                    currNeighbors.Add(_graph[x + 1, y]); // East
+                    if (y > 0)
+                    {
+                        currNeighbors.Add(_graph[x + 1, y - 1]); // Southeast
+                    }
+                    if (y < _mapSizeY - 1)
+                    {
+                        currNeighbors.Add(_graph[x + 1, y + 1]); // Northeast
+                    }
+                }
+
+                if (y > 0)
+                {
+                    currNeighbors.Add(_graph[x, y - 1]); // South
+                }
+                if (y < _mapSizeY - 1)
+                {
+                    currNeighbors.Add(_graph[x, y + 1]); // North
                 }
             }
         }
@@ -138,17 +211,27 @@ public class TileMap : MonoBehaviour
         unit.transform.position = TileCoordToWorldCoord(x, y);
     }
 
-    float CostToEnterTile(int x, int y)
+    float CostToEnterTile(int fromX, int fromY, int toX, int toY)
     {
-        TileType tt = _tileTypes[_tiles[x, y]];
-        return tt.movementCost == TileType.IMPASSABLE
-                ? Mathf.Infinity
-                : tt.movementCost;
+        TileType tt = _tileTypes[_tiles[toX, toY]];
+        if (tt.movementCost == TileType.IMPASSABLE)
+        {
+            return Mathf.Infinity;
+        }
+        float cost = tt.movementCost;
+        // We want diagonal moves to be slightly more expensive than NESW moves 
+        // because it just looks cleaner to move in cardinal directions.
+        if (fromX != toX && fromY != toY)
+        {
+            float smallestCostInTileTypes = Mathf.Max(_tileTypes.Min(t => t.movementCost), 0.01f);
+            cost += smallestCostInTileTypes * 0.01f;
+        }
+        return cost;
     }
 
-    float CostToEnterNode(Node n)
+    float CostToEnterNode(Node from, Node to)
     {
-        return CostToEnterTile(n.x, n.y);
+        return CostToEnterTile(from.x, from.y, to.x, to.y);
     }
 
     // Load the movement path to (x,y) into the currently selected unit
@@ -199,7 +282,7 @@ public class TileMap : MonoBehaviour
             unvisited.Remove(closest);
             foreach (Node neighbor in closest.neighbors)
             {
-                float alt = dist[closest] + CostToEnterNode(neighbor);
+                float alt = dist[closest] + CostToEnterNode(closest, neighbor);
                 if (alt < dist[neighbor])
                 {
                     dist[neighbor] = alt;

@@ -12,15 +12,6 @@ public class Node
         neighbors = new List<Node>();
     }
 
-    public float DistanceTo(Node n)
-    {
-        // Could use taxicab distance here, not sure what's better.
-        // Eventually might need to scale this based on stuff like
-        // swamps taking 2 moves to get through instead of 1
-        return Vector2.Distance(
-            new Vector2(this.x, this.y),
-            new Vector2(n.x, n.y));
-    }
     public string GetPosString()
     {
         return "(" + x + ", " + y + ")";
