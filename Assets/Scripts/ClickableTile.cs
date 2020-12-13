@@ -21,6 +21,6 @@ public class ClickableTile : MonoBehaviour
     private void OnMouseDown()
     {
         Debug.Log("Moving to x: " + _tileX + ", y: " + _tileY);
-        _map.MoveSelectedUnitTo(_tileX, _tileY);
+        _map.GeneratePathTo(_tileX, _tileY);
     }
 }

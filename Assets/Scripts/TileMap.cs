@@ -1,52 +1,63 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+
+// For pathfinding
+public class Node
+{
+    public int x, y;
+    public List<Node> neighbors; // Not an array lmao
+    public Node(int x, int y)
+    {
+        this.x = x;
+        this.y = y;
+        neighbors = new List<Node>();
+    }
+
+    public float DistanceTo(Node n)
+    {
+        // Could use taxicab distance here, not sure what's better.
+        // Eventually might need to scale this based on stuff like
+        // swamps taking 2 moves to get through instead of 1
+        return Vector2.Distance(
+            new Vector2(this.x, this.y),
+            new Vector2(n.x, n.y));
+    }
+    public string GetPosString()
+    {
+        return "(" + x + ", " + y + ")";
+    }
+    public override string ToString()
+    {
+        string str = GetPosString() + " -> [";
+        foreach (Node neighbor in neighbors)
+        {
+            str += neighbor.GetPosString() + ", ";
+        }
+        str += "]";
+        return str;
+    }
+}
 
 public class TileMap : MonoBehaviour
 {
-    // For pathfinding
-    class Node
-    {
-        public int x, y;
-        public List<Node> neighbors; // Not an array lmao
-        public Node(int x, int y)
-        {
-            this.x = x;
-            this.y = y;
-            neighbors = new List<Node>();
-        }
-        public string GetPosString()
-        {
-            return "(" + x + ", " + y + ")";
-        }
-        public override string ToString()
-        {
-            string str = GetPosString() + " -> [";
-            foreach (Node neighbor in neighbors)
-            {
-                str += neighbor.GetPosString() + ", ";
-            }
-            str += "]";
-            return str;
-        }
-    }
-
     // Game modifiers
     [SerializeField]
     int _mapSizeX, _mapSizeY;
     [SerializeField]
-    TileType[] _tileTypes; // Contains list of the type of tiles
+    TileType[] _tileTypes;          // Contains list of the type of tiles
     [SerializeField]
-    GameObject _tileEdgesPrefab; // For rendering borders on the tiles
+    GameObject _tileEdgesPrefab;    // For rendering borders on the tiles
     [SerializeField]
     bool _showTileGrid;
     [SerializeField]
     Camera _mainCamera;
 
     // Class vars
-    private GameObject _selectedUnit;
-    int[,] tiles;         // map of tile#s to their type
-    Node[,] _graph;       // Nodes for pathfinding
+    private Unit _selectedUnit;
+    int[,] tiles;                   // map of tile#s to their type
+    Node[,] _graph;                 // Nodes for pathfinding
 
 
     private void Start()
@@ -58,8 +69,8 @@ public class TileMap : MonoBehaviour
         _mainCamera.transform.position = new Vector3((_mapSizeX - 1) / 2f, (_mapSizeY - 1) / 2f, -10);
 
         // TODO: add unit selection
-        _selectedUnit = GameObject.Find("Unit");
-        MoveSelectedUnitTo(0, 0);
+        _selectedUnit = GameObject.Find("Unit").GetComponent<Unit>();
+        TeleportSelectedUnitTo(0, 0);
     }
 
     private void GenerateTiles()
@@ -164,9 +175,74 @@ public class TileMap : MonoBehaviour
         unit.transform.position = TileCoordToWorldCoord(x, y);
     }
 
-    // Pathfind to (x, y)
-    public void MoveSelectedUnitTo(int x, int y)
+    // Load the movement path to (x,y) into the currently selected unit
+    public void GeneratePathTo(int x, int y)
     {
-        TeleportSelectedUnitTo(x, y);
+        var dist = new Dictionary<Node, float>(); // Nodes mapped to their distance from (x,y)
+        var prev = new Dictionary<Node, Node>();  // Nodes mapped to the previous Node in the optimal path
+
+        _selectedUnit.GetPosition(out int startX, out int startY);
+        Node startNode = _graph[startX, startY];
+        Node targetNode = _graph[x, y];
+
+        dist[startNode] = 0;
+        prev[startNode] = null;
+
+        // Initialize all nodes to have ∞ distance, a null path, and unvisited
+        var unvisited = new List<Node>();
+        foreach (Node n in _graph)
+        {
+            unvisited.Add(n);
+
+            if (n != startNode)
+            {
+                dist[n] = Mathf.Infinity;
+                prev[n] = null;
+            }
+        }
+
+        while (unvisited.Count > 0)
+        {
+            // Get the closest remaining node in unvisited set
+            Node closest = null;
+            foreach (Node possibleClosest in unvisited)
+            {
+                if (closest == null || dist[possibleClosest] < dist[closest])
+                {
+                    closest = possibleClosest;
+                }
+            }
+
+            // If we've found the target, we're done
+            if (closest == targetNode)
+            {
+                break;
+            }
+
+            // Recalc the dist/prev for each of this node's neighbors and continue
+            unvisited.Remove(closest);
+            foreach (Node neighbor in closest.neighbors)
+            {
+                float alt = dist[closest] + closest.DistanceTo(neighbor);
+                if (alt < dist[neighbor])
+                {
+                    dist[neighbor] = alt;
+                    prev[neighbor] = closest;
+                }
+            }
+        }
+
+        var path = new List<Node>();
+
+        if (prev[targetNode] != null) // If no route was found, we can't move.
+        {
+            Node curr = targetNode;
+            while (curr != null)
+            {
+                path.Insert(0, curr); // We are iterating backwards from target, so we prepend
+                curr = prev[curr];
+            }
+        }
+        _selectedUnit.SetMovementPath(path);
     }
 }
