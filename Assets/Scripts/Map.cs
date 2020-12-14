@@ -546,10 +546,15 @@ public class Map : MonoBehaviour
         _selectedUnit.SetMovementPath(path);
     }
 
+    private Vector3Int TileCellUnderMouse()
+    {
+        return _tileMap.WorldToCell(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+    }
+
     private void OnMouseDown()
     {
         // Get the tile the player clicked
-        Vector3Int clickedTile = _tileMap.WorldToCell(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+        Vector3Int clickedTile = TileCellUnderMouse();
 
         Debug.Log("Moving to x: " + clickedTile.x + ", y: " + clickedTile.y);
         GeneratePathTo(clickedTile.x, clickedTile.y);
