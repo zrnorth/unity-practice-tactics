@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class Unit : MonoBehaviour
 {
@@ -12,7 +13,7 @@ public class Unit : MonoBehaviour
 
     // References
     [SerializeField]
-    private TileMap _map;
+    private Map _map;
 
     // Class vars
     private int _tileX, _tileY;
@@ -75,10 +76,17 @@ public class Unit : MonoBehaviour
     {
         if (_movementPath != null)
         {
+            Vector3Int currPos = new Vector3Int(0, 0, 0);
+            Vector3Int nextPos = new Vector3Int(0, 0, 0);
+            Tilemap tilemap = _map.GetComponent<Tilemap>();
             for (int curr = 0; curr < _movementPath.Count - 1; curr++)
             {
-                Vector3 start = _map.WorldCoordsForNode(_movementPath[curr]);
-                Vector3 end = _map.WorldCoordsForNode(_movementPath[curr + 1]);
+                currPos.x = _movementPath[curr].x;
+                currPos.y = _movementPath[curr].y;
+                Vector3 start = tilemap.CellToWorld(currPos);
+                nextPos.x = _movementPath[curr + 1].x;
+                nextPos.y = _movementPath[curr + 1].y;
+                Vector3 end = tilemap.CellToWorld(nextPos);
 
                 Debug.DrawLine(start, end);
             }
