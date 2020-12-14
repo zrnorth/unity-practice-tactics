@@ -441,7 +441,7 @@ public class Map : MonoBehaviour
     public float CostToEnterTile(int fromX, int fromY, int toX, int toY)
     {
         TileBase tile = _tileMap.GetTile(new Vector3Int(toX, toY, 0));
-        TileNavigationInfo tni = Array.Find(_tileNavInfo, t => t.name == tile.name);
+        TileNavigationInfo tni = Array.Find(_tileNavInfo, t => t.tile.name == tile.name);
 
         if (tni != null && tni.movementCost == TileNavigationInfo.IMPASSABLE)
         {
