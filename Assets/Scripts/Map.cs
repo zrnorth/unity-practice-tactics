@@ -290,8 +290,10 @@ public class Map : MonoBehaviour
     [SerializeField]
     float _defaultMovementCost = 1f;            // Non-specified tiles have this cost
 
+
     // Components
     Tilemap _tileMap;
+
 
     // Class vars
     Vector3Int _mapBounds;           // Helper; contains the size of the Tilemap.
@@ -315,46 +317,49 @@ public class Map : MonoBehaviour
         {
             Generate4WayPathfindingGraph();
         }
-
-        TeleportSelectedUnitTo(3, 3);
     }
 
     // No diagonal movement
     private void Generate4WayPathfindingGraph()
     {
         _graph = new Node[_mapBounds.x, _mapBounds.y];
+        List<Vector3Int> validPositions = new List<Vector3Int>();
         // Initialize the _graph array
         for (int x = 0; x < _mapBounds.x; x++)
         {
             for (int y = 0; y < _mapBounds.y; y++)
             {
-                _graph[x, y] = new Node(x, y);
+                Vector3Int pos = new Vector3Int(x, y, 0);
+                TileBase tile = _tileMap.GetTile(pos);
+                if (tile != null) // If this tile isn't painted we can't path there
+                {
+                    _graph[x, y] = new Node(x, y);
+                    validPositions.Add(pos);
+                }
             }
         }
 
-        for (int x = 0; x < _mapBounds.x; x++)
+        foreach (Vector3Int pos in validPositions)
         {
-            for (int y = 0; y < _mapBounds.y; y++)
+            int x = pos.x;
+            int y = pos.y;
+            List<Node> currNeighbors = _graph[x, y].neighbors;
+
+            if (x > 0 && _graph[x - 1, y] != null)
             {
-                List<Node> currNeighbors = _graph[x, y].neighbors;
-
-                if (x > 0)
-                {
-                    currNeighbors.Add(_graph[x - 1, y]);  // West
-                }
-                if (x < _mapBounds.x - 1)
-                {
-                    currNeighbors.Add(_graph[x + 1, y]);  // East
-                }
-                if (y > 0)
-                {
-                    currNeighbors.Add(_graph[x, y - 1]);  // South
-                }
-                if (y < _mapBounds.y - 1)
-                {
-                    currNeighbors.Add(_graph[x, y + 1]);  // North
-                }
-
+                currNeighbors.Add(_graph[x - 1, y]);  // West
+            }
+            if (x < _mapBounds.x - 1 && _graph[x + 1, y] != null)
+            {
+                currNeighbors.Add(_graph[x + 1, y]);  // East
+            }
+            if (y > 0 && _graph[x, y - 1] != null)
+            {
+                currNeighbors.Add(_graph[x, y - 1]);  // South
+            }
+            if (y < _mapBounds.y - 1 && _graph[x, y + 1] != null)
+            {
+                currNeighbors.Add(_graph[x, y + 1]);  // North
             }
         }
     }
@@ -363,55 +368,63 @@ public class Map : MonoBehaviour
     private void Generate8WayPathfindingGraph()
     {
         _graph = new Node[_mapBounds.x, _mapBounds.y];
+        List<Vector3Int> validPositions = new List<Vector3Int>();
         // Initialize the _graph array
         for (int x = 0; x < _mapBounds.x; x++)
         {
             for (int y = 0; y < _mapBounds.y; y++)
             {
-                _graph[x, y] = new Node(x, y);
+                Vector3Int pos = new Vector3Int(x, y, 0);
+                TileBase tile = _tileMap.GetTile(pos);
+                if (tile != null) // If this tile isn't painted we can't path there
+                {
+                    _graph[x, y] = new Node(x, y);
+                    validPositions.Add(pos);
+                }
             }
         }
 
-        for (int x = 0; x < _mapBounds.x; x++)
+        foreach (Vector3Int pos in validPositions)
         {
-            for (int y = 0; y < _mapBounds.y; y++)
+            int x = pos.x;
+            int y = pos.y;
+            List<Node> currNeighbors = _graph[x, y].neighbors;
+
+            if (x > 0 && _graph[x - 1, y] != null)
             {
-                List<Node> currNeighbors = _graph[x, y].neighbors;
+                currNeighbors.Add(_graph[x - 1, y]); // West
 
-                if (x > 0)
+                if (y > 0 && _graph[x - 1, y - 1] != null)
                 {
-                    currNeighbors.Add(_graph[x - 1, y]); // West
-                    if (y > 0)
-                    {
-                        currNeighbors.Add(_graph[x - 1, y - 1]); // Southwest
-                    }
-                    if (y < _mapBounds.y - 1)
-                    {
-                        currNeighbors.Add(_graph[x - 1, y + 1]); // Northwest
-                    }
+                    currNeighbors.Add(_graph[x - 1, y - 1]); // Southwest
                 }
+                if (y < _mapBounds.y - 1 && _graph[x - 1, y + 1] != null)
+                {
+                    currNeighbors.Add(_graph[x - 1, y + 1]); // Northwest
+                }
+            }
 
-                if (x < _mapBounds.x - 1)
-                {
-                    currNeighbors.Add(_graph[x + 1, y]); // East
-                    if (y > 0)
-                    {
-                        currNeighbors.Add(_graph[x + 1, y - 1]); // Southeast
-                    }
-                    if (y < _mapBounds.y - 1)
-                    {
-                        currNeighbors.Add(_graph[x + 1, y + 1]); // Northeast
-                    }
-                }
+            if (x < _mapBounds.x - 1 && _graph[x + 1, y] != null)
+            {
+                currNeighbors.Add(_graph[x + 1, y]); // East
 
-                if (y > 0)
+                if (y > 0 && _graph[x + 1, y - 1] != null)
                 {
-                    currNeighbors.Add(_graph[x, y - 1]); // South
+                    currNeighbors.Add(_graph[x + 1, y - 1]); // Southeast
                 }
-                if (y < _mapBounds.y - 1)
+                if (y < _mapBounds.y - 1 && _graph[x + 1, y + 1] != null)
                 {
-                    currNeighbors.Add(_graph[x, y + 1]); // North
+                    currNeighbors.Add(_graph[x + 1, y + 1]); // Northeast
                 }
+            }
+
+            if (y > 0 && _graph[x, y - 1] != null)
+            {
+                currNeighbors.Add(_graph[x, y - 1]); // South
+            }
+            if (y < _mapBounds.y - 1 && _graph[x, y + 1] != null)
+            {
+                currNeighbors.Add(_graph[x, y + 1]); // North
             }
         }
     }
@@ -429,21 +442,18 @@ public class Map : MonoBehaviour
     {
         TileBase tile = _tileMap.GetTile(new Vector3Int(toX, toY, 0));
         TileNavigationInfo tni = Array.Find(_tileNavInfo, t => t.name == tile.name);
-        if (tni == null)
-        {
-            return _defaultMovementCost;
-        }
-        if (tni.movementCost == TileNavigationInfo.IMPASSABLE)
+
+        if (tni != null && tni.movementCost == TileNavigationInfo.IMPASSABLE)
         {
             return Mathf.Infinity;
         }
-        float cost = tni.movementCost;
+
+        float cost = tni != null ? tni.movementCost : _defaultMovementCost;
         // We want diagonal moves to be slightly more expensive than NESW moves 
         // because it just looks cleaner to move in cardinal directions.
         if (fromX != toX && fromY != toY)
         {
-            float smallestCostInTileTypes = Mathf.Max(_tileNavInfo.Min(t => t.movementCost), 0.01f);
-            cost += smallestCostInTileTypes * 0.01f;
+            cost += 0.001f;
         }
         return cost;
     }
@@ -453,9 +463,9 @@ public class Map : MonoBehaviour
         return CostToEnterTile(from.x, from.y, to.x, to.y);
     }
 
-    public Vector3 WorldCoordsForNode(Node n)
+    public Vector3 WorldCoordsForCenterOfNode(Node n)
     {
-        return _tileMap.CellToWorld(new Vector3Int(n.x, n.y, 0));
+        return _tileMap.CellToWorld(new Vector3Int(n.x, n.y, 0)) + _tileMap.tileAnchor;
     }
 
     // Load the movement path to (x,y) into the currently selected unit
@@ -467,6 +477,12 @@ public class Map : MonoBehaviour
         _selectedUnit.GetPosition(out int startX, out int startY);
         Node startNode = _graph[startX, startY];
         Node targetNode = _graph[x, y];
+        if (targetNode == null)
+        {
+            Debug.LogError("There was an error in pathfinding generation. No node data for position: (" +
+                x + ", " + y + ")");
+            return;
+        }
 
         dist[startNode] = 0;
         prev[startNode] = null;
@@ -475,6 +491,7 @@ public class Map : MonoBehaviour
         var unvisited = new List<Node>();
         foreach (Node n in _graph)
         {
+            if (n == null) continue; // This tile was not filled, so its not pathable.
             unvisited.Add(n);
 
             if (n != startNode)

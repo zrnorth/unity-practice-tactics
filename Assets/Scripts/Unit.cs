@@ -10,6 +10,8 @@ public class Unit : MonoBehaviour
     private bool _canMoveDiagonally = false; // If true, this unit can move on diagonals, not just NESW.
     [SerializeField]
     private float _movementSpeed = 1; // Number of squares this unit can move per turn
+    [SerializeField]
+    private Vector2Int _startPos;
 
     // References
     [SerializeField]
@@ -18,6 +20,13 @@ public class Unit : MonoBehaviour
     // Class vars
     private int _tileX, _tileY;
     private List<Node> _movementPath;
+
+    private void Start()
+    {
+        Tilemap tilemap = _map.GetComponent<Tilemap>();
+        transform.position = tilemap.CellToWorld(new Vector3Int(_startPos.x, _startPos.y, 0)) + tilemap.tileAnchor;
+        SetTileMapPosition(_startPos.x, _startPos.y);
+    }
 
     // Honestly just wanted a chance to try the "out" keyword
     public void GetPosition(out int x, out int y)
@@ -59,7 +68,7 @@ public class Unit : MonoBehaviour
             Node curr = _movementPath[0];
             Node next = _movementPath[1];
             remainingMovement -= _map.CostToEnterNode(curr, next);
-            transform.position = _map.WorldCoordsForNode(next);
+            transform.position = _map.WorldCoordsForCenterOfNode(next);
             _tileX = next.x;
             _tileY = next.y;
             _movementPath.RemoveAt(0);
@@ -83,10 +92,10 @@ public class Unit : MonoBehaviour
             {
                 currPos.x = _movementPath[curr].x;
                 currPos.y = _movementPath[curr].y;
-                Vector3 start = tilemap.CellToWorld(currPos);
+                Vector3 start = tilemap.CellToWorld(currPos) + tilemap.tileAnchor;
                 nextPos.x = _movementPath[curr + 1].x;
                 nextPos.y = _movementPath[curr + 1].y;
-                Vector3 end = tilemap.CellToWorld(nextPos);
+                Vector3 end = tilemap.CellToWorld(nextPos) + tilemap.tileAnchor;
 
                 Debug.DrawLine(start, end);
             }
