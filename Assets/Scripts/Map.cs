@@ -18,18 +18,22 @@ public class Map : MonoBehaviour
 
     // Class vars
     Vector3Int _mapBounds;           // Helper; contains the size of the Tilemap.
-    private Unit _selectedUnit;
     int[,] _tiles;                   // map of tile#s to their type
     Node[,] _graph;                  // Nodes for pathfinding
-
+    private Unit _selectedUnit;
+    HashSet<Unit> _unitsOnMap;
 
     private void Start()
     {
         // TODO: add unit selection
         _tileMap = GetComponent<Tilemap>();
-        _selectedUnit = GameObject.Find("Unit").GetComponent<Unit>();
         _mapBounds = _tileMap.cellBounds.size;
+        _unitsOnMap = new HashSet<Unit>();
+    }
 
+    public void SelectUnit(Unit unit)
+    {
+        _selectedUnit = unit;
         if (_selectedUnit.CanMoveDiagonally())
         {
             Generate8WayPathfindingGraph();
@@ -39,6 +43,7 @@ public class Map : MonoBehaviour
             Generate4WayPathfindingGraph();
         }
     }
+
 
     // No diagonal movement
     private void Generate4WayPathfindingGraph()
@@ -149,6 +154,12 @@ public class Map : MonoBehaviour
             }
         }
     }
+
+    public void RegisterUnit(Unit unit)
+    {
+        _unitsOnMap.Add(unit);
+    }
+
 
     // TODO: add unit selection
     // jump directly to (x, y)
@@ -267,15 +278,33 @@ public class Map : MonoBehaviour
         _selectedUnit.SetMovementPath(path);
     }
 
-    private Vector3Int TileCellUnderMouse()
+    // Returns true if a tile is now selected.
+    // Returns false if there is no currently selected tile now.
+    public bool SelectTile(Vector3Int cell)
     {
-        return _tileMap.WorldToCell(Camera.main.ScreenToWorldPoint(Input.mousePosition));
-    }
+        // If we clicked a unit, make it the new selected unit.
+        // TODO multiple units on one square might be possible
+        foreach (Unit unit in _unitsOnMap)
+        {
+            if (unit.GetCellPosition() == cell)
+            {
+                SelectUnit(unit);
+                return true;
+            }
+        }
+        // If we clicked outside of the grid, deselect everything
+        if (cell.x < 0 ||
+            cell.x > _mapBounds.x ||
+            cell.y < 0 ||
+            cell.y > _mapBounds.y)
+        {
+            _selectedUnit = null;
+            return false;
+        }
 
-    private void OnMouseDown()
-    {
-        // Get the tile the player clicked
-        Vector3Int clickedTile = TileCellUnderMouse();
-        GeneratePathTo(clickedTile.x, clickedTile.y);
+        // Else we clicked in the grid somewhere, so select the tile.
+        // TODO allow tile selections (for later "tile info" page)
+        _selectedUnit = null;
+        return false;
     }
 }

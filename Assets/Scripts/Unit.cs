@@ -26,6 +26,8 @@ public class Unit : MonoBehaviour
     {
         Tilemap tilemap = _map.GetComponent<Tilemap>();
         transform.position = tilemap.CellToWorld(new Vector3Int(_startPos.x, _startPos.y, 0)) + tilemap.tileAnchor;
+        // Register with the map so they know we exist
+        _map.RegisterUnit(this);
         SetTileMapPosition(_startPos.x, _startPos.y);
         SetSelected(false);
     }
@@ -86,6 +88,11 @@ public class Unit : MonoBehaviour
                 _movementPath = null;
             }
         }
+    }
+
+    public Vector3Int GetCellPosition()
+    {
+        return new Vector3Int(_tileX, _tileY, 0);
     }
 
     private void DrawDebugPath()
