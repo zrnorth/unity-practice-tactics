@@ -50,3 +50,6 @@ TagManager:
   - name: Foreground
     uniqueID: 494237819
     locked: 0
+  - name: Grid
+    uniqueID: 688265727
+    locked: 0
