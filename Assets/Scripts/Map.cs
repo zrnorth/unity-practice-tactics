@@ -18,14 +18,15 @@ public class Map : MonoBehaviour
 
     // Class vars
     Vector3Int _mapBounds;           // Helper; contains the size of the Tilemap.
-    int[,] _tiles;                   // map of tile#s to their type
     Node[,] _graph;                  // Nodes for pathfinding
     private Unit _selectedUnit;
     HashSet<Unit> _unitsOnMap;
 
-    private void Start()
+    // This has to be Awake, not Start, because it must run before all the Units attempt to
+    // register with the map
+    private void Awake()
     {
-        // TODO: add unit selection
+        _selectedUnit = null;
         _tileMap = GetComponent<Tilemap>();
         _mapBounds = _tileMap.cellBounds.size;
         _unitsOnMap = new HashSet<Unit>();
@@ -43,7 +44,6 @@ public class Map : MonoBehaviour
             Generate4WayPathfindingGraph();
         }
     }
-
 
     // No diagonal movement
     private void Generate4WayPathfindingGraph()
@@ -157,11 +157,10 @@ public class Map : MonoBehaviour
 
     public void RegisterUnit(Unit unit)
     {
+        Debug.Log(unit.ToString());
         _unitsOnMap.Add(unit);
     }
 
-
-    // TODO: add unit selection
     // jump directly to (x, y)
     public void TeleportSelectedUnitTo(int x, int y)
     {
@@ -312,5 +311,13 @@ public class Map : MonoBehaviour
         // TODO allow tile selections (for later "tile info" page)
         _selectedUnit = null;
         return false;
+    }
+
+    public void MoveUnits()
+    {
+        foreach (Unit unit in _unitsOnMap)
+        {
+            unit.Move();
+        }
     }
 }

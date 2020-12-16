@@ -20,21 +20,14 @@ public class Unit : MonoBehaviour
     // Class vars
     private int _tileX, _tileY;
     private List<Node> _movementPath;
-    private bool _selected;
 
     private void Start()
     {
         Tilemap tilemap = _map.GetComponent<Tilemap>();
         transform.position = tilemap.CellToWorld(new Vector3Int(_startPos.x, _startPos.y, 0)) + tilemap.tileAnchor;
         // Register with the map so they know we exist
-        _map.RegisterUnit(this);
         SetTileMapPosition(_startPos.x, _startPos.y);
-        SetSelected(false);
-    }
-
-    public void SetSelected(bool isSelected)
-    {
-        _selected = isSelected;
+        _map.RegisterUnit(this);
     }
 
     // Honestly just wanted a chance to try the "out" keyword
