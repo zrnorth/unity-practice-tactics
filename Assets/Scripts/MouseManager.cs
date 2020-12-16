@@ -57,9 +57,18 @@ public class MouseManager : MonoBehaviour
             // Move the highlight sprite to be on the currently hovered tile cell.
             _highlightSpriteGameObject.transform.position = _grid.CellToWorld(_tileCellUnderMouse);
         }
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            HandleLeftClick();
+        }
+        else if (Input.GetMouseButtonDown(1))
+        {
+            HandleRightClick();
+        }
     }
 
-    private void OnMouseDown()
+    private void HandleLeftClick()
     {
         Debug.Log("mouse down");
         bool selected = _map.SelectTile(_tileCellUnderMouse);
@@ -72,6 +81,12 @@ public class MouseManager : MonoBehaviour
         {
             _selectRenderer.sprite = null;
         }
+    }
+
+    private void HandleRightClick()
+    {
+        // Right click moves units, so tell the map we want to update the selected unit's path.
+        _map.GeneratePathTo(_tileCellUnderMouse.x, _tileCellUnderMouse.y);
     }
 
     private void OnDestroy()

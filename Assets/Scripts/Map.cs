@@ -203,6 +203,13 @@ public class Map : MonoBehaviour
     // Load the movement path to (x,y) into the currently selected unit
     public void GeneratePathTo(int x, int y)
     {
+        if (_selectedUnit == null ||
+            x < 0 || x > _mapBounds.x ||
+            y < 0 || y > _mapBounds.y)
+        {
+            return;
+        }
+
         var dist = new Dictionary<Node, float>(); // Nodes mapped to their distance from (x,y)
         var prev = new Dictionary<Node, Node>();  // Nodes mapped to the previous Node in the optimal path
 
@@ -211,8 +218,7 @@ public class Map : MonoBehaviour
         Node targetNode = _graph[x, y];
         if (targetNode == null)
         {
-            Debug.LogError("There was an error in pathfinding generation. No node data for position: (" +
-                x + ", " + y + ")");
+            // We probably clicked on a tile on the collision layer
             return;
         }
 
