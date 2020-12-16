@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 public class MouseManager : MonoBehaviour
 {
@@ -13,6 +14,8 @@ public class MouseManager : MonoBehaviour
     private Texture2D _highlightTexture, _selectTexture;
 
     private Vector3Int _tileCellUnderMouse;
+    private bool _shouldRenderHighlightSprite;
+
     private GameObject _highlightSpriteGameObject;
     private Sprite _highlightSprite;
     private SpriteRenderer _highlightRenderer;
@@ -23,6 +26,8 @@ public class MouseManager : MonoBehaviour
 
     private void Start()
     {
+        _shouldRenderHighlightSprite = true;
+
         // Create a child object which holds the highlight sprite
         _highlightSpriteGameObject = new GameObject("Highlight Sprite", typeof(SpriteRenderer));
         _highlightSpriteGameObject.transform.parent = this.transform;
@@ -57,6 +62,7 @@ public class MouseManager : MonoBehaviour
             // Move the highlight sprite to be on the currently hovered tile cell.
             _highlightSpriteGameObject.transform.position = _grid.CellToWorld(_tileCellUnderMouse);
         }
+        _highlightRenderer.sprite = _shouldRenderHighlightSprite ? _highlightSprite : null;
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -95,5 +101,15 @@ public class MouseManager : MonoBehaviour
         {
             Destroy(_highlightSpriteGameObject);
         }
+    }
+
+    public void StartHoveringButton()
+    {
+        _shouldRenderHighlightSprite = false;
+    }
+
+    public void StopHoveringButton()
+    {
+        _shouldRenderHighlightSprite = true;
     }
 }
